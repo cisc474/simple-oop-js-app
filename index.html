@@ -14,7 +14,10 @@
     <div class="dialogue" id="dialogue">
         <strong>Dialogue:</strong>
     </div>
-
+<!-- The above is just enough for our basic "view" I'll have two buttons, a Roster on the left, a Dialogue box on the right. -->
+<!-- Below is a common trick for hiding templates inside of an html docuent.  A script of type text/javascript is ignored by browsers. 
+     I am using Underscore templating syntax which will let me fill the <% %> brackets with text at run time. -->
+    
     <script id="memberTemplate" type="text/template">
     <p class="member">
     <span class="role"><%= role %></span>
@@ -30,23 +33,43 @@
     </script>
 
     <script>
+//this line makes sure my code doesn't run until the document is loaded:
 $(document).ready(function(){
+
+/* In javascript every function is a class, there aren't special keywords for classes.  I use a capitalized variable name 
+to differentiate Roster the class from some roster instantiation/object in the future.  I will make a new Roster by calling 
+new Roser() at some point.  The function gets executed at when I do that so it is its own constructor.  */
+
+//Note that most of my classes are made purely in the data world, the display and html aspects will come later via a "controller"
+//These are "models"
+
 var Roster = function(){
+    
+    //this is a magic word in javascript, "this" represents the scope of this function and 
+    //is a stand in for the object that will get created later.  I often create an alternate word for "this"
+    //that way in subfunctions I can still access the original this.  In this case I'll use roster when I need to.
     var roster = this;
     this.members = [];
     this.addPerson = function(role, name){
+        //I will create a new person and alter some default properties
         var aPerson = new Person();
         aPerson.role = role;
         aPerson.name = name;
+        //adding the new person to the roster
         roster.members.push(aPerson);
     };
+    
+    //A method to get a random speaker.
     this.randomSpeaker = function(){
         var ind = Math.floor(Math.random()*roster.members.length);
         return roster.members[ind];
     };
+    
+    //I'll default to adding "Doctor Andy"
     this.addPerson("Doctor", "Andy");
 };
 
+//My person model has some defaults, a toJSON function, and a speakTo function which merely returns text.
 var Person = function(){
     var person = this;
     this.name = "John Doe";
@@ -59,9 +82,20 @@ var Person = function(){
     };
 };
 
+/*
+This is a "controller" its job is to connect a "model" and the "view".  In this case the "View" is our HTML 
+which the user views and interacts with and the model is the Roster.  When one of the buttons is clicked we'll tell the roster to 
+add a new person, when the conversation button is clicked we will have one person talk to another person.  The roster and 
+people don't know any html and would behave the same whether they were in a command line only program or in a video game system.  
+The controller is aware enough to talk to both the HTML and the models.
+
+I see models as the brains of the operation, views as the skin, and controllers as the muscle.
+
+*/
 var AppController = function(){
     var app = this;
     app.roster = new Roster();
+    //this function will use the template for each person to populate the roster on screen.
     app.displayRoster = function(roster){
         var memberTemplate = _.template($("#memberTemplate").html());
         $("#roster").html("<strong>Roster:</strong> ");
@@ -69,28 +103,36 @@ var AppController = function(){
             $("#roster").append(memberTemplate(member.toJSON()));
         });
     };
+    
     app.displayRoster();
+    
+//this function will 
+//force one person to talk to another.  
+//They'll decide what to say and the controller will put the message in the view
     app.makeConversation = function(){
         var speaker = app.roster.randomSpeaker();
         var subject = app.roster.randomSpeaker();
         var message = speaker.speakTo(subject);
-        console.log(message);
-        console.log(subject);
-        console.log(speaker);
         var messageTemplate = _.template($("#messageTemplate").html());
         $("#dialogue").append(messageTemplate({name: speaker.name, message: message}));
     };
+    
+    //These are the wiring from button clicking to actions
     $("#conversation").click(app.makeConversation);
+    
     $("#addPerson").click(function(){
         app.roster.addPerson("Gossiper", "John Doe");
         app.displayRoster();
     });
 };
 
-var chatroom = new AppController();
+//This is the app running, by creating a new app.
+var virtual_chatroom = new AppController();
+
 });
     </script>
 
+<!-- The following is some simple CSS to make multiple columns-->
     <style>
 .roster {
     float: left;
