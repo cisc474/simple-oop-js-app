@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+    <title>Simple Object Oriented App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+</head>
+<body>
+    <button type="button" id="addPerson">Add Person</button>
+    <button type="button" id="conversation">Force Conversation</button>
+    <hr/>
+    <div class="roster" id="roster">
+    </div>
+    <div class="dialogue" id="dialogue">
+        <strong>Dialogue:</strong>
+    </div>
+
+    <script id="memberTemplate" type="text/template">
+    <p class="member">
+    <span class="role"><%= role %></span>
+    <%= name %>
+    </p>
+    </script>
+
+    <script id="messageTemplate" type="text/template">
+    <p class="message">
+    <span class="speaker"><%= name %></span>
+    <%= message %>
+    </p>
+    </script>
+
+    <script>
+$(document).ready(function(){
+var Roster = function(){
+    var roster = this;
+    this.members = [];
+    this.addPerson = function(role, name){
+        var aPerson = new Person();
+        aPerson.role = role;
+        aPerson.name = name;
+        roster.members.push(aPerson);
+    };
+    this.randomSpeaker = function(){
+        var ind = Math.floor(Math.random()*roster.members.length);
+        return roster.members[ind];
+    };
+    this.addPerson("Doctor", "Andy");
+};
+
+var Person = function(){
+    var person = this;
+    this.name = "John Doe";
+    this.role = "Gossiper";
+    this.toJSON = function(){
+        return {name: person.name, role: person.role };
+    };
+    this.speakTo = function(subject){
+       return "Hello "+subject.name+", I am "+person.name+". I am a "+person.role;
+    };
+};
+
+var AppController = function(){
+    var app = this;
+    app.roster = new Roster();
+    app.displayRoster = function(roster){
+        var memberTemplate = _.template($("#memberTemplate").html());
+        $("#roster").html("<strong>Roster:</strong> ");
+        _.each(app.roster.members, function(member){
+            $("#roster").append(memberTemplate(member.toJSON()));
+        });
+    };
+    app.displayRoster();
+    app.makeConversation = function(){
+        var speaker = app.roster.randomSpeaker();
+        var subject = app.roster.randomSpeaker();
+        var message = speaker.speakTo(subject);
+        console.log(message);
+        console.log(subject);
+        console.log(speaker);
+        var messageTemplate = _.template($("#messageTemplate").html());
+        $("#dialogue").append(messageTemplate({name: speaker.name, message: message}));
+    };
+    $("#conversation").click(app.makeConversation);
+    $("#addPerson").click(function(){
+        app.roster.addPerson("Gossiper", "John Doe");
+        app.displayRoster();
+    });
+};
+
+var chatroom = new AppController();
+});
+    </script>
+
+    <style>
+.roster {
+    float: left;
+    width: 50%;
+}
+
+.dialogue {
+    margin-left: 50%;
+}
+
+.role {
+    float : left;
+    width: 25%;
+    color: blue;
+    font-weight: bold;
+}
+
+.speaker {
+    float : left;
+    width: 25%;
+    color: red;
+    font-weight: bold;    
+}
+    </style>
+</body>
+</html>
